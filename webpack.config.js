@@ -1,4 +1,5 @@
-const path = require('path');
+// 将 CommonJS 模块引入方式转换为 ES 模块引入方式
+const path=require("path");
 // 引入 HtmlWebpackPlugin 插件，用于生成 HTML 文件并自动注入打包后的资源
 const HtmlWebpackPlugin=require("html-webpack-plugin")
 // 引入 ReactRefreshWebpackPlugin 插件，用于实现 React 组件的热更新
@@ -7,7 +8,7 @@ const ReactRefreshWebpackPlugin=require("@pmmmwh/react-refresh-webpack-plugin");
 module.exports={
     // 设置构建模式为开发模式，会包含调试信息和优化开发体验的功能
     mode: "development",
-    entry:"./src/index.js",
+    entry:"./src/index.tsx",
     // 配置打包输出信息
     output:{
         // 指定输出文件的目录，使用 path.resolve 方法解析为绝对路径
@@ -57,7 +58,7 @@ module.exports={
             "@/*": path.resolve(__dirname, "src")
         },
         // 配置文件扩展名，当引入模块时可以省略这些扩展名
-        extensions: ['.js', '.jsx', '.json', '.ts','tsx'] // 添加扩展名解析
+        extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'], // 添加扩展名解析
     },
     // 配置 Webpack 插件
     plugins:[
@@ -72,13 +73,13 @@ module.exports={
     // 配置模块加载规则
     module:{
         rules:[{// 匹配 .js 和 .jsx 文件
-            test: /\.(js|jsx)$/,// 排除 node_modules 目录下的文件
+            test: /\.(js|jsx|ts|tsx)$/, // 匹配 .js、.jsx、.ts 和 .tsx 文件
             exclude: /node_modules/,// 使用 babel-loader 处理匹配的文件
             use: {
                 loader: 'babel-loader',
                 options: {
                     // 配置 Babel 预设
-                    presets: ['@babel/preset-env', '@babel/preset-react'],
+                    presets: [['@babel/preset-env', { targets: 'ie 6-11, > 0.25%, not dead' }], '@babel/preset-react', '@babel/preset-typescript'], // 添加 TypeScript 预设
                     // 配置 Babel 插件
                     plugins: [
                         'react-refresh/babel',
@@ -90,33 +91,21 @@ module.exports={
             test: /\.less$/, // 匹配 .less 文件
             exclude: /node_modules/,
             use: [
-                // 'style-loader',
-                {
+                { 
                     loader: 'style-loader',
-                    options:{
-                        modules:{
-                            localIdentName: '[local]--[hash:base64:5]'
-                        }
-                    }
+                    options: {} 
                 },
                 {
                     loader: 'css-loader',
-                    options: {
-                        modules: {
-                             localIdentName: '[local]--[hash:base64:5]'
-                        }
-                    }
+                    options: {} 
                 },
                 {
                     loader: 'less-loader',
-                    options: {
-                        lessOptions: {
-                            javascriptEnabled: true,
-                            modules:{
-                                localIdentName: '[local]--[hash:base64:5]'
-                            }
-                        },
-                    },
+                    options: { 
+                        lessOptions: { 
+                            javascriptEnabled: true 
+                        }
+                    }
                 }
             ]
         }

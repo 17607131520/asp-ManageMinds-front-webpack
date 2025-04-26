@@ -6,7 +6,7 @@ import ZhCN from 'antd/locale/zh_CN';
 import routers from "./routers"
 import "./index.less"
 
-const container = document.getElementById('root')
+const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
 
 root.render(
