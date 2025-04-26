@@ -112,5 +112,7 @@ module.exports={
     ]
     },
     // 配置优化选项
-    optimization:{},
+    optimization:{
+        minimize: true, // 代码压缩，
+    },
 }
