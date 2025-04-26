@@ -2,7 +2,7 @@ const path = require('path');
 // 引入 HtmlWebpackPlugin 插件，用于生成 HTML 文件并自动注入打包后的资源
 const HtmlWebpackPlugin=require("html-webpack-plugin")
 // 引入 ReactRefreshWebpackPlugin 插件，用于实现 React 组件的热更新
-const ReactRefreshWebpackPlugin=require("@pmmmwh/react-refresh-webpack-plugin")
+const ReactRefreshWebpackPlugin=require("@pmmmwh/react-refresh-webpack-plugin");
 
 module.exports={
     // 设置构建模式为开发模式，会包含调试信息和优化开发体验的功能
@@ -71,12 +71,9 @@ module.exports={
     ],
     // 配置模块加载规则
     module:{
-        rules:[{
-            // 匹配 .js 和 .jsx 文件
-            test: /\.(js|jsx)$/,
-            // 排除 node_modules 目录下的文件
-            exclude: /node_modules/,
-            // 使用 babel-loader 处理匹配的文件
+        rules:[{// 匹配 .js 和 .jsx 文件
+            test: /\.(js|jsx)$/,// 排除 node_modules 目录下的文件
+            exclude: /node_modules/,// 使用 babel-loader 处理匹配的文件
             use: {
                 loader: 'babel-loader',
                 options: {
@@ -88,7 +85,42 @@ module.exports={
                     ]
                 }
             }
-        }]
+        }, 
+        {
+            test: /\.less$/, // 匹配 .less 文件
+            exclude: /node_modules/,
+            use: [
+                // 'style-loader',
+                {
+                    loader: 'style-loader',
+                    options:{
+                        modules:{
+                            localIdentName: '[local]--[hash:base64:5]'
+                        }
+                    }
+                },
+                {
+                    loader: 'css-loader',
+                    options: {
+                        modules: {
+                             localIdentName: '[local]--[hash:base64:5]'
+                        }
+                    }
+                },
+                {
+                    loader: 'less-loader',
+                    options: {
+                        lessOptions: {
+                            javascriptEnabled: true,
+                            modules:{
+                                localIdentName: '[local]--[hash:base64:5]'
+                            }
+                        },
+                    },
+                }
+            ]
+        }
+    ]
     },
     // 配置优化选项
     optimization:{},
