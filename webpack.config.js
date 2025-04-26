@@ -1,4 +1,3 @@
-// 将 CommonJS 模块引入方式转换为 ES 模块引入方式
 // 引入 HtmlWebpackPlugin 插件，用于生成 HTML 文件并自动注入打包后的资源
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 // 引入 ReactRefreshWebpackPlugin 插件，用于实现 React 组件的热更新
