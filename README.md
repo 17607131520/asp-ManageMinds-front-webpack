@@ -1,0 +1,1 @@
+# asp-ManageMinds-front-webpack
