@@ -56,9 +56,7 @@ export default [
           project: './tsconfig.json',
         },
         alias: {
-          map: [
-            ['@', './src'], // 假设你的项目中 '@' 别名指向 'src' 目录
-          ],
+          map: [['@', './src']],
           extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.less', 'scss', 'scss'],
         },
       },

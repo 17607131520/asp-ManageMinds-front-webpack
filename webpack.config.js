@@ -31,8 +31,8 @@ module.exports = {
     // proxy:{},
     // 配置客户端行为
     client: {
-      // 设置客户端日志级别为 info
-      logging: 'info',
+      // 可根据需求调整日志级别，可选值有 'log', 'info', 'warn', 'error', 'none'
+      logging: 'none',
       // 当出现编译错误或警告时，在浏览器中显示全屏覆盖层
       overlay: true,
     },
@@ -46,15 +46,15 @@ module.exports = {
     onListening(devServer) {
       // 获取服务器监听的端口号
       const port = devServer.server.address().port;
-      // 打印服务器监听的端口号
-      console.log(`Server is listening on port ${port}`);
+      // 可根据需求调整启动时的输出信息
+      console.log(`开发服务器已启动，监听端口 ${port}`);
     },
   },
   // 配置模块解析规则
   resolve: {
     // 配置路径别名，方便在代码中引入模块
     alias: {
-      '@/*': path.resolve(__dirname, 'src'),
+      '@': path.resolve(__dirname, 'src'),
     },
     // 配置文件扩展名，当引入模块时可以省略这些扩展名
     extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'], // 添加扩展名解析
@@ -117,5 +117,11 @@ module.exports = {
   // 配置优化选项
   optimization: {
     minimize: true, // 代码压缩，
+    cache: {
+      type: 'filesystem',
+      buildDependencies: {
+        config: [__filename],
+      },
+    },
   },
 };
