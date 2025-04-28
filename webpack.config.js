@@ -32,24 +32,29 @@ module.exports = {
   },
   // 开发服务器配置，仅开发环境生效
   devServer: {
-    static: path.join(__dirname, 'dist'), // 静态资源根目录
-    port: 3000, // 端口号
-    compress: true, // 启用 Gzip 压缩
-    hot: true, // 启用热模块替换
-    open: true, // 自动打开浏览器
-    // proxy: {}, // 可配置代理
+    static: path.join(__dirname, 'dist'),
+    port: 'auto', // 自动查找可用端口
+    compress: true,
+    hot: true,
+    open: true,
     client: {
-      logging: 'none', // 控制台日志级别
-      overlay: true, // 编译错误时全屏覆盖提示
+      logging: 'error',
+      overlay: {
+        errors: true,
+        warnings: true,
+      },
+      progress: true,
     },
-    liveReload: true, // 实时刷新
-    historyApiFallback: true, // 支持 history 路由
-    watchFiles: ['/src/**'], // 监听 src 目录下文件变化
+    liveReload: true,
+    historyApiFallback: true,
+    watchFiles: ['/src/**'],
     onListening(devServer) {
-      // 服务器启动成功后的回调
       const port = devServer.server.address().port;
-      console.log(`开发服务器已启动，监听端口 ${port}`);
+      console.log(`\n🚀 开发服务器已启动，监听端口 ${port}`);
+      console.log(`📱 本地访问: http://localhost:${port}`);
+      console.log(`🌍 局域网访问: http://${require('ip').address()}:${port}\n`);
     },
+    setupExitSignals: true,
   },
   // 模块解析配置
   resolve: {
@@ -67,9 +72,9 @@ module.exports = {
     }),
     new Dotenv({
       path: `./.env.${process.env.NODE_ENV}`, // 根据环境加载不同的 .env 文件
-      safe: true, // 检查 .env.example 文件
       systemvars: true, // 允许读取系统环境变量
       allowEmptyValues: true, // 允许空值
+      defaults: true, // 允许使用默认值
     }),
     new FriendlyErrorsWebpackPlugin(), // 更友好的错误提示
     new ProgressBarPlugin(), // 打包进度条
@@ -129,27 +134,70 @@ module.exports = {
   },
   // 构建缓存配置，加快二次构建速度
   cache: {
-    type: 'filesystem', // 使用文件缓存
+    type: 'filesystem',
     buildDependencies: {
-      config: [__filename], // 依赖当前配置文件
+      config: [__filename],
+      tsconfig: [path.resolve(__dirname, 'tsconfig.json')], // 添加 tsconfig 依赖
     },
+    cacheDirectory: path.resolve(__dirname, 'node_modules/.cache/webpack'),
+    name: `${process.env.NODE_ENV}-${process.env.BABEL_ENV || 'default'}`,
+    compression: 'gzip',
+    hashAlgorithm: 'md4',
+    store: 'pack',
+    idleTimeout: 10000,
+    idleTimeoutForInitialStore: 5000,
+    maxAge: 1000 * 60 * 60 * 24,
+    allowCollectingMemory: true,
+    profile: true,
   },
   // 优化相关配置
   optimization: {
+    moduleIds: 'deterministic', // 使用确定的模块 ID，提升缓存命中率
+    chunkIds: 'deterministic', // 使用确定的 chunk ID，提升缓存命中率
     splitChunks: {
-      chunks: 'all', // 代码分割，所有 chunk 都分割
+      chunks: 'all',
+      minSize: 20000, // 最小尺寸，小于此值的模块不会被分割
+      minChunks: 1, // 最小被引用次数
+      maxAsyncRequests: 30, // 最大异步请求数
+      maxInitialRequests: 30, // 最大初始化请求数
       cacheGroups: {
-        vendors: { test: /[\\/]node_modules[\\/]/, name: 'vendors', chunks: 'all' }, // 第三方库单独打包
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+          priority: 10, // 优先级
+          reuseExistingChunk: true, // 重用已存在的 chunk
+        },
+        common: {
+          name: 'common',
+          minChunks: 2,
+          priority: 5,
+          reuseExistingChunk: true,
+        },
       },
     },
-    runtimeChunk: { name: 'runtime' }, // 提取 runtime 代码，提升缓存
-    minimize: !isDev, // 生产环境开启压缩
+    runtimeChunk: {
+      name: 'runtime',
+    },
+    minimize: !isDev,
     minimizer: [
       new TerserPlugin({
-        terserOptions: { compress: { drop_console: true } }, // 移除 console
-        parallel: true, // 多线程压缩
+        terserOptions: {
+          compress: {
+            drop_console: !isDev,
+            drop_debugger: !isDev,
+            pure_funcs: ['console.log'], // 移除 console.log
+          },
+          format: {
+            comments: false,
+          },
+        },
+        parallel: true,
+        extractComments: false,
       }),
-      new CssMinimizerPlugin(), // 压缩 CSS
+      new CssMinimizerPlugin({
+        parallel: true,
+      }),
     ],
   },
   // source map 配置，开发环境用 cheap-module-source-map，生产用 hidden-source-map
@@ -160,6 +208,14 @@ module.exports = {
     maxEntrypointSize: 512000, // 入口文件最大体积
     maxAssetSize: 512000, // 单个资源最大体积
   },
-  // 控制台输出内容，显示错误和警告
-  stats: 'errors-warnings',
+  // 控制台输出内容
+  stats: {
+    warnings: true,
+    errors: true,
+    errorDetails: true,
+    warningsFilter: /export.*was not found in/,
+    chunks: false,
+    modules: false,
+    children: false,
+  },
 };
