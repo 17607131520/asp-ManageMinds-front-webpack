@@ -10,6 +10,7 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer'); // 用于�
 const FriendlyErrorsWebpackPlugin = require('@soda/friendly-errors-webpack-plugin'); // 友好错误提示
 const TerserPlugin = require('terser-webpack-plugin'); // 用于压缩 JS
 const ProgressBarPlugin = require('progress-bar-webpack-plugin'); // 显示打包进度条
+const CompressionPlugin = require('compression-webpack-plugin');
 
 // 判断当前是否为开发环境
 const isDev = process.env.NODE_ENV !== 'production';
@@ -27,6 +28,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     // 输出文件名，生产环境带 hash 便于缓存
     filename: isDev ? '[name].js' : '[name].[contenthash:8].js',
+    chunkFilename: isDev ? '[name].chunk.js' : '[name].[contenthash:8].chunk.js',
     publicPath: '/', // 公共路径，通常用于 SPA
     clean: true, // 每次打包前清空输出目录
   },
@@ -65,10 +67,90 @@ module.exports = {
     modules: [path.resolve(__dirname, 'src'), 'node_modules'], // 模块查找目录
   },
   // 插件配置
+  externals: {
+    react: 'React',
+    'react-dom': 'ReactDOM',
+    'react-dom/client': 'ReactDOM',
+    antd: 'antd',
+    moment: 'moment',
+    '@ant-design/icons': 'icons',
+    '@ant-design/pro-components': 'ProComponents',
+    lodash: '_',
+    'lodash-es': '_',
+    '@remix-run/router': 'Router',
+    '@remix-run/web-fetch': 'WebFetch',
+    '@remix-run/web-blob': 'WebBlob',
+    '@remix-run/web-file': 'WebFile',
+    '@remix-run/web-stream': 'WebStream',
+    '@remix-run/web-form-data': 'WebFormData',
+    '@ant-design/pro-layout': 'ProLayout',
+    '@ant-design/pro-table': 'ProTable',
+    '@ant-design/pro-form': 'ProForm',
+    '@ant-design/pro-descriptions': 'ProDescriptions',
+    '@ant-design/pro-list': 'ProList',
+    '@ant-design/pro-card': 'ProCard',
+    '@ant-design/pro-skeleton': 'ProSkeleton',
+    '@ant-design/pro-utils': 'ProUtils',
+    '@ant-design/pro-field': 'ProField',
+    '@ant-design/pro-provider': 'ProProvider',
+    '@ant-design/pro-components': 'ProComponents',
+  },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './public/index.html', // HTML 模板路径
-      filename: 'index.html', // 生成的 HTML 文件名
+      template: './public/index.html',
+      filename: 'index.html',
+      minify: !isDev
+        ? {
+            removeComments: true,
+            collapseWhitespace: true,
+            removeRedundantAttributes: true,
+            useShortDoctype: true,
+            removeEmptyAttributes: true,
+            removeStyleLinkTypeAttributes: true,
+            keepClosingSlash: true,
+            minifyJS: true,
+            minifyCSS: true,
+            minifyURLs: true,
+          }
+        : false,
+      cdnConfig: {
+        js: [
+          'https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js',
+          'https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js',
+          'https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.js',
+          'https://cdn.jsdelivr.net/npm/moment@2/min/moment.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/icons@5/dist/index.umd.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-components@2/dist/pro-components.min.js',
+          'https://cdn.jsdelivr.net/npm/lodash@4/lodash.min.js',
+          'https://cdn.jsdelivr.net/npm/@remix-run/router@1/dist/router.umd.min.js',
+          'https://cdn.jsdelivr.net/npm/@remix-run/web-fetch@1/dist/web-fetch.umd.min.js',
+          'https://cdn.jsdelivr.net/npm/@remix-run/web-blob@1/dist/web-blob.umd.min.js',
+          'https://cdn.jsdelivr.net/npm/@remix-run/web-file@1/dist/web-file.umd.min.js',
+          'https://cdn.jsdelivr.net/npm/@remix-run/web-stream@1/dist/web-stream.umd.min.js',
+          'https://cdn.jsdelivr.net/npm/@remix-run/web-form-data@1/dist/web-form-data.umd.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-layout@7/dist/pro-layout.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-table@3/dist/pro-table.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-form@2/dist/pro-form.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-descriptions@2/dist/pro-descriptions.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-list@2/dist/pro-list.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-card@2/dist/pro-card.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-skeleton@2/dist/pro-skeleton.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-utils@2/dist/pro-utils.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-field@2/dist/pro-field.min.js',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-provider@2/dist/pro-provider.min.js',
+        ],
+        css: [
+          'https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.css',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-components@2/dist/pro-components.min.css',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-layout@7/dist/pro-layout.min.css',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-table@3/dist/pro-table.min.css',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-form@2/dist/pro-form.min.css',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-descriptions@2/dist/pro-descriptions.min.css',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-list@2/dist/pro-list.min.css',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-card@2/dist/pro-card.min.css',
+          'https://cdn.jsdelivr.net/npm/@ant-design/pro-skeleton@2/dist/pro-skeleton.min.css',
+        ],
+      },
     }),
     new Dotenv({
       path: `./.env.${process.env.NODE_ENV}`, // 根据环境加载不同的 .env 文件
@@ -82,8 +164,23 @@ module.exports = {
     !isDev &&
       new MiniCssExtractPlugin({
         filename: '[name].[contenthash:8].css', // 生产环境提取 CSS 并加 hash
+        chunkFilename: '[name].[contenthash:8].chunk.css',
       }),
-    !isDev && new BundleAnalyzerPlugin({ analyzerMode: 'static', openAnalyzer: false }), // 生产环境分析打包体积
+    !isDev &&
+      new CompressionPlugin({
+        filename: '[path][base].gz',
+        algorithm: 'gzip',
+        test: /\.(js|css|html|svg)$/,
+        threshold: 10240,
+        minRatio: 0.8,
+      }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      openAnalyzer: false,
+      generateStatsFile: true,
+      statsFilename: 'stats.json',
+      reportFilename: 'bundle-report.html',
+    }),
   ].filter(Boolean), // 过滤掉无效插件（如 isDev 为 false 时）
   // 模块加载规则
   module: {
@@ -137,7 +234,7 @@ module.exports = {
     type: 'filesystem',
     buildDependencies: {
       config: [__filename],
-      tsconfig: [path.resolve(__dirname, 'tsconfig.json')], // 添加 tsconfig 依赖
+      tsconfig: [path.resolve(__dirname, 'tsconfig.json')],
     },
     cacheDirectory: path.resolve(__dirname, 'node_modules/.cache/webpack'),
     name: `${process.env.NODE_ENV}-${process.env.BABEL_ENV || 'default'}`,
@@ -149,30 +246,73 @@ module.exports = {
     maxAge: 1000 * 60 * 60 * 24,
     allowCollectingMemory: true,
     profile: true,
+    version: '1.0.0', // 添加版本号，强制更新缓存
   },
   // 优化相关配置
   optimization: {
-    moduleIds: 'deterministic', // 使用确定的模块 ID，提升缓存命中率
-    chunkIds: 'deterministic', // 使用确定的 chunk ID，提升缓存命中率
+    moduleIds: 'deterministic',
+    chunkIds: 'deterministic',
     splitChunks: {
       chunks: 'all',
-      minSize: 20000, // 最小尺寸，小于此值的模块不会被分割
-      minChunks: 1, // 最小被引用次数
-      maxAsyncRequests: 30, // 最大异步请求数
-      maxInitialRequests: 30, // 最大初始化请求数
+      minSize: 10000, // 降低最小尺寸
+      minChunks: 1,
+      maxAsyncRequests: 20, // 降低最大异步请求数
+      maxInitialRequests: 20, // 降低最大初始请求数
       cacheGroups: {
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+          name: 'react',
+          chunks: 'all', // 改为 all
+          priority: 40,
+          reuseExistingChunk: true,
+          enforce: true, // 强制拆分
+        },
+        antd: {
+          test: /[\\/]node_modules[\\/](@ant-design|antd)[\\/]/,
+          name: 'antd',
+          chunks: 'all', // 改为 all
+          priority: 30,
+          reuseExistingChunk: true,
+          enforce: true, // 强制拆分
+        },
+        lodash: {
+          test: /[\\/]node_modules[\\/](lodash|lodash-es)[\\/]/,
+          name: 'lodash',
+          chunks: 'all', // 改为 all
+          priority: 20,
+          reuseExistingChunk: true,
+          enforce: true, // 强制拆分
+        },
         vendors: {
           test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          chunks: 'all',
-          priority: 10, // 优先级
-          reuseExistingChunk: true, // 重用已存在的 chunk
+          name(module) {
+            const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+            if (
+              ['react', 'react-dom', 'antd', '@ant-design', 'lodash', 'lodash-es'].includes(
+                packageName,
+              )
+            ) {
+              return false;
+            }
+            if (packageName.startsWith('@ant-design/')) {
+              return 'antd-group';
+            }
+            if (packageName.startsWith('@remix-run/')) {
+              return 'remix-group';
+            }
+            return `vendor.${packageName.replace('@', '')}`;
+          },
+          chunks: 'all', // 改为 all
+          priority: 10,
+          reuseExistingChunk: true,
+          maxSize: 150000, // 降低最大尺寸
         },
         common: {
           name: 'common',
           minChunks: 2,
           priority: 5,
           reuseExistingChunk: true,
+          maxSize: 150000, // 降低最大尺寸
         },
       },
     },
@@ -186,7 +326,27 @@ module.exports = {
           compress: {
             drop_console: !isDev,
             drop_debugger: !isDev,
-            pure_funcs: ['console.log'], // 移除 console.log
+            pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
+            passes: 4, // 增加压缩次数
+            reduce_vars: true,
+            reduce_funcs: true,
+            dead_code: true,
+            unused: true,
+            toplevel: true,
+            booleans_as_integers: true,
+            if_return: true,
+            join_vars: true,
+            collapse_vars: true,
+            sequences: true,
+            properties: true,
+            drop_debugger: true,
+            unsafe: true, // 启用不安全优化
+          },
+          mangle: {
+            toplevel: true,
+            properties: {
+              regex: /^_/,
+            },
           },
           format: {
             comments: false,
@@ -197,6 +357,23 @@ module.exports = {
       }),
       new CssMinimizerPlugin({
         parallel: true,
+        minimizerOptions: {
+          preset: [
+            'default',
+            {
+              discardComments: { removeAll: true },
+              normalizeWhitespace: true,
+              minifyFontValues: true,
+              minifyGradients: true,
+              minifySelectors: true,
+              mergeRules: true,
+              mergeLonghand: true,
+              discardEmpty: true,
+              discardDuplicates: true,
+              discardOverridden: true,
+            },
+          ],
+        },
       }),
     ],
   },
@@ -204,9 +381,12 @@ module.exports = {
   devtool: isDev ? 'cheap-module-source-map' : 'hidden-source-map',
   // 性能提示配置
   performance: {
-    hints: isDev ? false : 'warning', // 生产环境超出体积限制时警告
-    maxEntrypointSize: 512000, // 入口文件最大体积
-    maxAssetSize: 512000, // 单个资源最大体积
+    hints: isDev ? false : 'warning',
+    maxEntrypointSize: 250000,
+    maxAssetSize: 250000,
+    assetFilter: function (assetFilename) {
+      return !assetFilename.endsWith('.map');
+    },
   },
   // 控制台输出内容
   stats: {
@@ -217,5 +397,8 @@ module.exports = {
     chunks: false,
     modules: false,
     children: false,
+    assets: true,
+    assetsSort: 'size',
+    performance: true,
   },
 };
