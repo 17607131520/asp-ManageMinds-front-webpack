@@ -179,7 +179,7 @@ module.exports = {
       openAnalyzer: false,
       generateStatsFile: true,
       statsFilename: 'stats.json',
-      reportFilename: 'bundle-report.html',
+      reportFilename: '../bundle-report.html',
     }),
   ].filter(Boolean), // 过滤掉无效插件（如 isDev 为 false 时）
   // 模块加载规则
@@ -378,7 +378,7 @@ module.exports = {
     ],
   },
   // source map 配置，开发环境用 cheap-module-source-map，生产用 hidden-source-map
-  devtool: isDev ? 'cheap-module-source-map' : 'hidden-source-map',
+  devtool: isDev ? 'cheap-module-source-map' : false,
   // 性能提示配置
   performance: {
     hints: isDev ? false : 'warning',
