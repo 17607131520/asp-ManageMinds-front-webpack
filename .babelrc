@@ -1,20 +1,28 @@
 {
   // 配置 Babel 预设，预设是一组插件的集合，用于处理特定类型的代码转换
-  "presets": [["@babel/preset-env",
-  {
-    // 配置目标浏览器，支持 IE 6 到 11 版本，市场占有率超过 0.25% 且未停止维护的浏览器
-    "targets": "ie 6-11, > 0.25%, not dead"
-  }
-  ], ["@babel/preset-react"]],
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        // 配置目标浏览器，支持 IE 6 到 11 版本，市场占有率超过 0.25% 且未停止维护的浏览器
+        "targets": "ie 6-11, > 0.25%, not dead"
+      }
+    ],
+    ["@babel/preset-react"],
+    ["@babel/preset-typescript"]
+  ],
   // 配置 Babel 插件，插件用于对代码进行特定的转换
   "plugins": [
     // 用于支持 React 组件的热更新
     "react-refresh/babel",
-    ["module-resolver", {
-      // 配置模块解析别名，@ 指向项目的 src 目录
-      "alias": {
-        "@": "./src"
+    [
+      "module-resolver",
+      {
+        // 配置模块解析别名，@ 指向项目的 src 目录
+        "alias": {
+          "@": "./src"
+        }
       }
-    }]
+    ]
   ]
 }

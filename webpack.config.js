@@ -3,17 +3,30 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 // 引入 ReactRefreshWebpackPlugin 插件，用于实现 React 组件的热更新
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+const FriendlyErrorsWebpackPlugin = require('@soda/friendly-errors-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const ProgressBarPlugin = require('progress-bar-webpack-plugin');
+
+const isDev = process.env.NODE_ENV !== 'production';
 
 module.exports = {
   // 设置构建模式为开发模式，会包含调试信息和优化开发体验的功能
-  mode: 'development',
-  entry: './src/index.tsx',
+  mode: isDev ? 'development' : 'production',
+  entry: {
+    app: './src/index.tsx',
+  },
   // 配置打包输出信息
   output: {
     // 指定输出文件的目录，使用 path.resolve 方法解析为绝对路径
     path: path.resolve(__dirname, 'dist'),
     // 指定输出文件的名称
-    filename: 'bundle.js',
+    filename: isDev ? '[name].js' : '[name].[contenthash:8].js',
+    publicPath: '/',
+    clean: true,
   },
   // 配置开发服务器
   devServer: {
@@ -57,7 +70,8 @@ module.exports = {
       '@': path.resolve(__dirname, 'src'),
     },
     // 配置文件扩展名，当引入模块时可以省略这些扩展名
-    extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'], // 添加扩展名解析
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+    modules: [path.resolve(__dirname, 'src'), 'node_modules'],
   },
   // 配置 Webpack 插件
   plugins: [
@@ -66,62 +80,106 @@ module.exports = {
       // 指定生成的 HTML 文件的名称
       filename: 'index.html',
     }),
-    // 实例化 ReactRefreshWebpackPlugin 插件
-    new ReactRefreshWebpackPlugin(),
-  ],
+    new Dotenv({
+      path: `./.env.${process.env.NODE_ENV}`,
+      safe: true,
+      systemvars: true,
+      allowEmptyValues: true,
+    }),
+    new FriendlyErrorsWebpackPlugin(), // 更友好的错误提示
+    new ProgressBarPlugin(),
+    isDev && new ReactRefreshWebpackPlugin(),
+    !isDev &&
+      new MiniCssExtractPlugin({
+        filename: '[name].[contenthash:8].css',
+      }),
+    !isDev && new BundleAnalyzerPlugin({ analyzerMode: 'static', openAnalyzer: false }),
+  ].filter(Boolean),
   // 配置模块加载规则
   module: {
     rules: [
       {
-        // 匹配 .js 和 .jsx 文件
-        test: /\.(js|jsx|ts|tsx)$/, // 匹配 .js、.jsx、.ts 和 .tsx 文件
-        exclude: /node_modules/, // 使用 babel-loader 处理匹配的文件
-        use: {
-          loader: 'babel-loader',
-          options: {
-            // 配置 Babel 预设
-            presets: [
-              ['@babel/preset-env', { targets: 'ie 6-11, > 0.25%, not dead' }],
-              '@babel/preset-react',
-              '@babel/preset-typescript',
-            ], // 添加 TypeScript 预设
-            // 配置 Babel 插件
-            plugins: ['react-refresh/babel'],
-          },
-        },
+        test: /\.(js|jsx|ts|tsx)$/,
+        use: [
+          isDev && { loader: 'babel-loader', options: { plugins: ['react-refresh/babel'] } },
+          !isDev && 'babel-loader',
+        ].filter(Boolean),
+        exclude: /node_modules/,
       },
       {
-        test: /\.less$/, // 匹配 .less 文件
-        exclude: /node_modules/,
+        test: /\.less$/,
         use: [
-          {
-            loader: 'style-loader',
-            options: {},
-          },
-          {
-            loader: 'css-loader',
-            options: {},
-          },
+          isDev ? 'style-loader' : MiniCssExtractPlugin.loader,
+          { loader: 'css-loader', options: { modules: false } },
+          'postcss-loader',
           {
             loader: 'less-loader',
             options: {
               lessOptions: {
                 javascriptEnabled: true,
+                modifyVars: { '@primary-color': '#1DA57A' }, // antd 主题色举例
               },
             },
           },
         ],
       },
+      {
+        test: /\.(png|jpe?g|gif|svg|woff2?|eot|ttf)$/,
+        type: 'asset',
+        parser: { dataUrlCondition: { maxSize: 10 * 1024 } },
+        generator: { filename: 'static/[name].[contenthash:8][ext]' },
+      },
+      {
+        test: /\.svg$/,
+        use: ['@svgr/webpack'],
+        issuer: /\.[jt]sx?$/,
+      },
+      {
+        test: /\.(css)$/,
+        use: [isDev ? 'style-loader' : MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
+      },
     ],
   },
-  // 配置优化选项
-  optimization: {
-    minimize: true, // 代码压缩，
-    cache: {
-      type: 'filesystem',
-      buildDependencies: {
-        config: [__filename],
-      },
+  cache: {
+    type: 'filesystem',
+    buildDependencies: {
+      config: [__filename],
     },
   },
+  // optimization: {
+  //   // splitChunks: {
+  //   //   chunks: 'all',
+  //   // },
+  //   minimize: true,
+  //   minimizer: [
+  //     '...', // 保留默认的 TerserPlugin
+  //     new CssMinimizerPlugin(),
+  //   ],
+  // },
+
+  // 优化配置
+  optimization: {
+    splitChunks: {
+      chunks: 'all', // 代码分割
+      cacheGroups: {
+        vendors: { test: /[\\/]node_modules[\\/]/, name: 'vendors', chunks: 'all' },
+      },
+    },
+    runtimeChunk: { name: 'runtime' }, // 提取runtime代码
+    minimize: !isDev,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: { compress: { drop_console: true } },
+        parallel: true,
+      }),
+      new CssMinimizerPlugin(),
+    ],
+  },
+  devtool: isDev ? 'cheap-module-source-map' : 'hidden-source-map',
+  performance: {
+    hints: isDev ? false : 'warning',
+    maxEntrypointSize: 512000,
+    maxAssetSize: 512000,
+  },
+  stats: 'errors-warnings', // 控制台只输出错误和警告
 };
